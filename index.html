@@ -306,7 +306,7 @@ function isWedOrFri(o) { return [3,5].includes(dateFromOffset(o).getDay()); }
 function getTasks(o) { return ALL_TASKS.filter(t => t.id!=='bol_res' || isWedOrFri(o)); }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
-function renderTasks(tasks, checked) {
+function renderTasks(tasks, checked, keySnapshot) {
   const list = document.getElementById('task-list');
   list.innerHTML = '';
   tasks.forEach(t => {
@@ -317,7 +317,7 @@ function renderTasks(tasks, checked) {
       <div class="checkbox"><span class="check-icon">&#10003;</span></div>
       <span class="task-name">${t.label}</span>
       ${t.badge?`<span class="task-badge">${t.badge}</span>`:''}`;
-    el.onclick = () => toggleTask(t.id, tasks);
+    el.onclick = () => toggleTask(t.id, tasks, keySnapshot);
     list.appendChild(el);
   });
 }
@@ -345,7 +345,7 @@ function loadDay(offset) {
   unsubscribe = ref.on('value', snap => {
     isLoading = true;
     const data = snap.val() || { checked:{}, atividades:'', pendencias:'' };
-    renderTasks(tasks, data.checked||{});
+    renderTasks(tasks, data.checked||{}, key);
     updateProgress(tasks, data.checked||{});
     document.getElementById('atividades').value  = data.atividades  || '';
     document.getElementById('pendencias').value  = data.pendencias  || '';
@@ -354,9 +354,8 @@ function loadDay(offset) {
   });
 }
 
-function toggleTask(id, tasks) {
-  const key = dayKey(currentOffset);
-  const ref = db.ref(`servico/${key}/checked/${id}`);
+function toggleTask(id, tasks, keySnapshot) {
+  const ref = db.ref(`servico/${keySnapshot}/checked/${id}`);
   ref.transaction(val => !val);
 }
 
