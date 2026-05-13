@@ -125,7 +125,7 @@ const ALL_TASKS = [
   { id:'encerrar',  label:'Encerrar o serviço',          badge:'Final' },
 ];
 
-let db, autoSaveTimer = null, isLoading = false, unsubscribe = null;
+let db, autoSaveTimer = null, isLoading = false, currentRef = null;
 
 // Navegação por data real (evita bug de offset acumulado)
 let navDate = new Date();
@@ -221,10 +221,11 @@ function loadDay() {
   const tasks = getTasks(d);
   document.getElementById('day-label').textContent = getDayLabel(d);
 
-  if(unsubscribe) { unsubscribe(); unsubscribe = null; }
+  if(currentRef) { currentRef.off('value'); currentRef = null; }
 
   const ref = db.ref('servico/' + key);
-  unsubscribe = ref.on('value', function(snap) {
+  currentRef = ref;
+  ref.on('value', function(snap) {
     isLoading = true;
     const data = snap.val() || { checked:{}, atividades:'', pendencias:'' };
     renderTasks(tasks, data.checked || {}, key);
